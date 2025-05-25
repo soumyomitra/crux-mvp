@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { signInWithGoogle } from '@/lib/auth'
+
 
 export default function HomePage() {
   return (
@@ -14,12 +16,13 @@ export default function HomePage() {
         <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
           Summarized. De-duplicated. Audible. Wake up to a clean, concise digest—automatically delivered at <strong>7am PT</strong>.
         </p>
-        <Link
-          href="/login"
+        <button
+         onClick={signInWithGoogle}
           className="inline-block mt-8 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-full shadow-lg"
         >
-          Get Started
-        </Link>
+         Get Started with Google
+         </button>
+
       </section>
 
       {/* Background Image */}

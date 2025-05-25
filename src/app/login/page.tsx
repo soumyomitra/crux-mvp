@@ -10,18 +10,20 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        router.push('/dashboard') // ✅ Redirect after login
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      router.push('/dashboard')
     }
-  }, [router])
+  })
+
+  return () => {
+    subscription.unsubscribe()
+  }
+}, [router])
+
+
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
