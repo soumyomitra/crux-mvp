@@ -8,10 +8,10 @@ import { playTextFromAPI } from '@/lib/tts'
 export default function Dashboard() {
   const [userName, setUserName] = useState('')
   const [digestDate, setDigestDate] = useState('')
-  const [topics, setTopics] = useState<any[]>([])
+  type Topic = { topic: string; summary: string }
+  const [topics, setTopics] = useState<Topic[]>([])
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -75,14 +75,12 @@ export default function Dashboard() {
       speakTopic(0)
     } else {
       audioRef.current?.play()
-      setIsPaused(false)
       setIsPlaying(true)
     }
   }
 
   const handlePause = () => {
     audioRef.current?.pause()
-    setIsPaused(true)
     setIsPlaying(false)
   }
 
