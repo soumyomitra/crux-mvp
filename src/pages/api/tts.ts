@@ -6,12 +6,17 @@ export const config = {
   },
 }
 
+// Define the expected request shape
+type TTSRequest = {
+  text: string
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { text } = req.body
+  const { text } = req.body as TTSRequest
   if (!text) {
     return res.status(400).json({ error: 'Missing text input' })
   }
@@ -19,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const elevenApiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY
     const voiceId = process.env.ELEVENLABS_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9'
-
 
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
@@ -47,8 +51,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const audioBuffer = await response.arrayBuffer()
     res.setHeader('Content-Type', 'audio/mpeg')
     res.status(200).send(Buffer.from(audioBuffer))
-  } catch (err: any) {
-    console.error('Server error:', err)
-    res.status(500).json({ error: 'Unexpected error', message: err.message })
+  } catch (err) {
+    const error = err as Error
+    console.error('Server error:', error)
+    res.status(500).json({ error: 'Unexpected error', message: error.message })
   }
 }
