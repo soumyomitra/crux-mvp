@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link href="/" className="text-xl font-bold">Crux.ai</Link>
           <nav className="space-x-4">
             <Link href="/">Home</Link>
-            <Link href="/past-digests">Past Digests</Link>
+            
             {user ? (
               <>
                 <Link href="/dashboard">Dashboard</Link>
