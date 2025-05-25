@@ -44,7 +44,6 @@ export default function Dashboard() {
     try {
       const topic = topics[index]
       setCurrentIndex(index)
-      setIsPaused(false)
       setIsPlaying(true)
 
       if (audioRef.current) {
