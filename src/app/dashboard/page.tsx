@@ -2,40 +2,51 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { getUser } from '@/lib/auth'
 import { playTextFromAPI } from '@/lib/tts'
 
 export default function Dashboard() {
   const [userName, setUserName] = useState('')
   const [digestDate, setDigestDate] = useState('')
-  type Topic = { topic: string; summary: string }
-  const [topics, setTopics] = useState<Topic[]>([])
+  const [topics, setTopics] = useState<{ topic: string; summary: string }[]>([])
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    async function fetchData() {
-      const user = await getUser()
-      if (user) {
-        setUserName(user.user_metadata.full_name || user.email)
-        const { data, error } = await supabase
-          .from('daily_digests')
-          .select('digest_date, topics')
-          .eq('user_id', user.id)
-          .order('digest_date', { ascending: false })
-          .limit(1)
-          .single()
+    async function checkAuthAndFetch() {
+      const { data: { user } } = await supabase.auth.getUser()
 
-        if (error) console.error('Digest fetch error:', error.message)
-        else {
-          setDigestDate(data.digest_date)
-          setTopics(data.topics || [])
-        }
+      if (!user) {
+        setRedirecting(true)
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 1500)
+        return
       }
+
+      setUserName(user.user_metadata.full_name || user.email)
+
+      const { data, error } = await supabase
+        .from('daily_digests')
+        .select('digest_date, topics')
+        .eq('user_id', user.id)
+        .order('digest_date', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) console.error('Digest fetch error:', error.message)
+      else {
+        setDigestDate(data.digest_date)
+        setTopics(data.topics || [])
+      }
+
+      setAuthChecked(true)
     }
-    fetchData()
+
+    checkAuthAndFetch()
   }, [])
 
   const speakTopic = async (index: number) => {
@@ -93,6 +104,22 @@ export default function Dashboard() {
     if (currentIndex !== null && currentIndex > 0) {
       speakTopic(currentIndex - 1)
     }
+  }
+
+  if (redirecting) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">
+        Redirecting to login…
+      </main>
+    )
+  }
+
+  if (!authChecked) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">
+        Loading dashboard…
+      </main>
+    )
   }
 
   return (

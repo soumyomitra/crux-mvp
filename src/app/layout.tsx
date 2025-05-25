@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <button
                   onClick={async () => {
                     await supabase.auth.signOut()
-                    window.location.reload()
+                    window.location.href = '/' // ✅ Redirect to home after logout
                   }}
                   className="text-red-600 hover:underline"
                 >
