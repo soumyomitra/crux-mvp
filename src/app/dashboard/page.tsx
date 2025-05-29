@@ -7,7 +7,9 @@ import { playTextFromAPI } from '@/lib/tts'
 export default function Dashboard() {
   const [userName, setUserName] = useState('')
   const [digestDate, setDigestDate] = useState('')
-  const [topics, setTopics] = useState<{ topic: string; summary: string }[]>([])
+  
+  const [topics, setTopics] = useState<{ topic: string; summary: string; sources?: string[] }[]>([])
+
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
@@ -138,20 +140,27 @@ export default function Dashboard() {
                 currentIndex === idx ? 'bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'
               }`}
             >
-              {t.topic}
+              {t.topic} {t.sources ? `(${t.sources.length} mention${t.sources.length > 1 ? 's' : ''})` : ''}
             </li>
           ))}
         </ul>
       </div>
 
       <div className="w-1/2 pl-8">
-        {currentIndex !== null && (
+        {currentIndex !== null && topics[currentIndex] && (
           <div className="bg-gray-900 p-6 rounded shadow text-left">
             <h3 className="text-2xl font-bold mb-2">{topics[currentIndex].topic}</h3>
             <p className="text-white text-lg">{topics[currentIndex].summary}</p>
+
+            {Array.isArray(topics[currentIndex].sources) && topics[currentIndex].sources.length > 0 && (
+              <p className="text-sm text-gray-400 mt-4">
+                <strong>Sources:</strong> {topics[currentIndex].sources.join(', ')}
+              </p>
+            )}
           </div>
         )}
       </div>
+
 
       <footer className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 shadow-lg flex items-center justify-center gap-6 z-50">
         <button
