@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
@@ -6,8 +6,8 @@ import { playTextFromAPI } from '@/lib/tts'
 
 export default function Dashboard() {
   const [userName, setUserName] = useState('')
-  const [digestDates, setDigestDates] = useState<string[]>([])
-  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [digestDate, setDigestDate] = useState('')
+  const [availableDates, setAvailableDates] = useState<string[]>([])
   const [topics, setTopics] = useState<{ topic: string; summary: string; sources?: string[] }[]>([])
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -17,8 +17,9 @@ export default function Dashboard() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    async function checkAuthAndFetchDates() {
+    async function checkAuthAndFetch() {
       const { data: { user } } = await supabase.auth.getUser()
+
       if (!user) {
         setRedirecting(true)
         setTimeout(() => {
@@ -36,35 +37,40 @@ export default function Dashboard() {
         .order('digest_date', { ascending: false })
 
       if (error) console.error('Date fetch error:', error.message)
-      else if (data.length > 0) {
-        const dates = data.map((row) => row.digest_date)
-        setDigestDates(dates)
-        setSelectedDate(dates[0])
+      else {
+        const dates = data.map((d: any) => d.digest_date)
+        setAvailableDates(dates)
+        if (dates.length > 0) {
+          setDigestDate(dates[0])
+        }
       }
 
       setAuthChecked(true)
     }
-    checkAuthAndFetchDates()
+
+    checkAuthAndFetch()
   }, [])
 
   useEffect(() => {
     async function fetchDigest() {
-      if (!selectedDate) return
-
+      if (!digestDate) return
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const { data, error } = await supabase
         .from('daily_digests')
         .select('topics')
         .eq('user_id', user.id)
-        .eq('digest_date', selectedDate)
+        .eq('digest_date', digestDate)
         .single()
 
       if (error) console.error('Digest fetch error:', error.message)
       else setTopics(data.topics || [])
       setCurrentIndex(null)
     }
+
     fetchDigest()
-  }, [selectedDate])
+  }, [digestDate])
 
   const speakTopic = async (index: number) => {
     if (index < 0 || index >= topics.length) return
@@ -98,8 +104,9 @@ export default function Dashboard() {
   }
 
   const handlePlay = () => {
-    if (currentIndex === null) speakTopic(0)
-    else {
+    if (currentIndex === null) {
+      speakTopic(0)
+    } else {
       audioRef.current?.play()
       setIsPlaying(true)
     }
@@ -111,28 +118,37 @@ export default function Dashboard() {
   }
 
   const handleNext = () => {
-    if (currentIndex !== null && currentIndex < topics.length - 1) speakTopic(currentIndex + 1)
+    if (currentIndex !== null && currentIndex < topics.length - 1) {
+      speakTopic(currentIndex + 1)
+    }
   }
 
   const handlePrevious = () => {
-    if (currentIndex !== null && currentIndex > 0) speakTopic(currentIndex - 1)
+    if (currentIndex !== null && currentIndex > 0) {
+      speakTopic(currentIndex - 1)
+    }
   }
 
-  if (redirecting) return <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">Redirecting to login…</main>
-  if (!authChecked) return <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">Loading dashboard…</main>
+  if (redirecting) {
+    return <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">Redirecting to login…</main>
+  }
+
+  if (!authChecked) {
+    return <main className="flex items-center justify-center min-h-screen bg-black text-white text-xl">Loading dashboard…</main>
+  }
 
   return (
     <main className="flex min-h-screen bg-black text-white px-4 py-8 pb-24">
       <div className="w-1/2 pr-8">
         <h1 className="text-4xl font-bold mb-4">Hello, {userName}</h1>
         <div className="mb-4">
-          <label className="block text-sm mb-2 font-semibold">Select a Digest Date</label>
+          <label className="text-sm font-semibold mr-2">Select Date:</label>
           <select
-            className="bg-gray-800 text-white px-4 py-2 rounded w-full"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-gray-800 text-white rounded px-3 py-2"
+            value={digestDate}
+            onChange={(e) => setDigestDate(e.target.value)}
           >
-            {digestDates.map((date) => (
+            {availableDates.map((date) => (
               <option key={date} value={date}>{date}</option>
             ))}
           </select>
@@ -143,7 +159,9 @@ export default function Dashboard() {
             <li
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`cursor-pointer p-3 rounded ${currentIndex === idx ? 'bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'}`}
+              className={`cursor-pointer p-3 rounded ${
+                currentIndex === idx ? 'bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'
+              }`}
             >
               {t.topic} {t.sources ? `(${t.sources.length} mention${t.sources.length > 1 ? 's' : ''})` : ''}
             </li>
