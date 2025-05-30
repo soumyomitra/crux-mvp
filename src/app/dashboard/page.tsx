@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { playTextFromAPI } from '@/lib/tts'
