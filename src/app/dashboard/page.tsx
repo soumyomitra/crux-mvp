@@ -38,7 +38,7 @@ export default function Dashboard() {
 
       if (error) console.error('Date fetch error:', error.message)
       else {
-        const dates = data.map((d: any) => d.digest_date)
+        const dates = (data as { digest_date: string }[]).map((d) => d.digest_date)
         setAvailableDates(dates)
         if (dates.length > 0) {
           setDigestDate(dates[0])
